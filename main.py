@@ -1,33 +1,11 @@
-import requests
 import os
 import polars as pl
+import api
 
 season = "2024-25"
 
-def fetch_global_data() -> pl.DataFrame:
-    print("Getting global data")
-    url = "https://fantasy.premierleague.com/api/bootstrap-static/"
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
-
-
-def fetch_gw(gw_num: int) -> pl.DataFrame:
-    print(f"Getting data for gameweek {gw_num}")
-    url = f"https://fantasy.premierleague.com/api/event/{gw_num}/live/"
-    response = requests.get(url)
-    response.raise_for_status()
-    data = response.json()
-
-    df = pl.DataFrame(data["elements"])
-    stats_df = pl.DataFrame(df["stats"].to_list())
-    df = df.drop("stats").with_columns(stats_df)
-    df = df.drop("explain")
-
-    return df
-
 def add_player_info(players: pl.DataFrame, teams: pl.DataFrame, positions: pl.DataFrame, gw: pl.DataFrame) -> pl.DataFrame:
-    players = players.select(["id", "first_name", "second_name", "team", "element_type"])
+    players = players.select(["id", "first_name", "second_name", "team", "element_type", "now_cost", "ep_this", "ep_next", "selected_by_percent", "expected_goals_per_90", "expected_goal_involvements_per_90", "expected_goals_conceded_per_90", "goals_conceded_per_90", "starts_per_90", "clean_sheets_per_90"])
 
     players = players.with_columns(
         (players["first_name"] + " " + players["second_name"]).alias("name")
@@ -51,18 +29,21 @@ def save_to_csv(df: pl.DataFrame, gw: int) -> None:
     print(f"GW saved as: {filename}")
 
 
-def main(latest_gw: int) -> None:
-    global_data = fetch_global_data()
+def main() -> None:
+    latest_gw = int(input("Enter latest gameweek number: "))
+    if latest_gw < 1 or latest_gw > 38:
+        print("Gameweek number can only be 1-38")
+        return
+
+    global_data = api.fetch_global_data()
     players = pl.DataFrame(global_data["elements"])
     teams = pl.DataFrame(global_data["teams"])
     positions = pl.DataFrame(global_data["element_types"])
 
-    for gw_num in range(1, latest_gw + 1):
-        gw = fetch_gw(gw_num)
-        print(f"Adding player info for gameweek {gw_num}")
-        gw = add_player_info(players, teams, positions, gw)
-        save_to_csv(gw, gw_num)
+    gw = api.fetch_gw(latest_gw)
+    print(f"Adding player info for gameweek {latest_gw}")
+    gw = add_player_info(players, teams, positions, gw)
+    save_to_csv(gw, latest_gw)
 
 if __name__ == "__main__":
-    latest_gw = 29
-    main(latest_gw)
+    main()
