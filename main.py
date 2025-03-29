@@ -1,8 +1,17 @@
 import os
 import polars as pl
 import api
+from typing import Optional
 
 season = "2024-25"
+
+def get_latest_gw(events: pl.DataFrame) -> Optional[int]:
+    completed_gw = events.filter(events["finished"] == True)
+    if completed_gw.is_empty():
+        print("No gameweeks are completed!")
+        return None
+
+    return completed_gw.select("id").max().item()
 
 def add_player_info(players: pl.DataFrame, teams: pl.DataFrame, positions: pl.DataFrame, gw: pl.DataFrame) -> pl.DataFrame:
     players = players.select(["id", "first_name", "second_name", "team", "element_type", "now_cost", "ep_this", "ep_next", "selected_by_percent", "expected_goals_per_90", "expected_goal_involvements_per_90", "expected_goals_conceded_per_90", "goals_conceded_per_90", "starts_per_90", "clean_sheets_per_90"])
@@ -30,15 +39,14 @@ def save_to_csv(df: pl.DataFrame, gw: int) -> None:
 
 
 def main() -> None:
-    latest_gw = int(input("Enter latest gameweek number: "))
-    if latest_gw < 1 or latest_gw > 38:
-        print("Gameweek number can only be 1-38")
-        return
-
     global_data = api.fetch_global_data()
     players = pl.DataFrame(global_data["elements"])
     teams = pl.DataFrame(global_data["teams"])
     positions = pl.DataFrame(global_data["element_types"])
+
+    latest_gw = get_latest_gw(pl.DataFrame(global_data["events"]))
+    if latest_gw is None:
+        return
 
     gw = api.fetch_gw(latest_gw)
     print(f"Adding player info for gameweek {latest_gw}")
