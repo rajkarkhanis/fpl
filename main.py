@@ -3,7 +3,7 @@ import polars as pl
 import api
 from typing import Optional
 
-season = "2024-25"
+season = "2025-26"
 
 def get_latest_gw(events: pl.DataFrame) -> Optional[int]:
     completed_gw = events.filter(events["finished"] == True)

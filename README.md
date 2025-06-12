@@ -2,7 +2,7 @@
 
 Since Vaastav will stop pushing updates to his [fpl](https://github.com/vaastav/Fantasy-Premier-League) repository after 2024-25 season, I figured I'll write my own FPL API scraper. My repository is not meant to be a direct replacement to Vaastav's.
 
-I've only added the scripts about the data I actually used, which was gameweek by gameweek data on players. Also, I won't be adding the generated .csv files to VCS. You're gonna have to run the script and get them yourself.
+I've only added the scripts about the data I actually used, which was gameweek by gameweek data on players.
 
 Thanks to [Oliver Looney](https://www.oliverlooney.com/blogs/FPL-APIs-Explained) for explaining the FPL API endpoints.
 
@@ -17,6 +17,7 @@ cd fpl
 ### Create a virtual environment (optional but recommended)
 I use conda, if you do as well:
 ```bash
+conda create --name fpl
 conda activate fpl
 ```
 
